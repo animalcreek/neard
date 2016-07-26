@@ -11,4 +11,5 @@ fi
 		--prefix=/usr \
 		--enable-ese \
 		--sysconfdir=/etc \
+		$CONFIGURE_FLAGS \
 		--enable-tools "$@"
