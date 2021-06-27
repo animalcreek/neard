@@ -36,8 +36,10 @@ static GSList *adapters;
 
 static struct nfc_adapter *selected_adapter;
 
-static void adapter_get_devices(struct nfc_adapter *adapter)
+static void adapter_get_devices(gpointer arg1, gpointer arg2)
 {
+	struct nfc_adapter *adapter = arg1;
+
 	if (adapter->rf_mode == NFC_RF_INITIATOR)
 		nl_get_targets(adapter);
 
@@ -52,13 +54,15 @@ int adapter_all_get_devices(void)
 	if (err)
 		return err;
 
-	g_slist_foreach(adapters, (GFunc)adapter_get_devices, NULL);
+	g_slist_foreach(adapters, adapter_get_devices, NULL);
 
 	return 0;
 }
 
-static void adapter_print_target(guint32 idx, gchar *type)
+static void adapter_print_target(gpointer arg1, gpointer arg2)
 {
+	guint32 idx = (guint32)((unsigned long)arg1 & 0xffffffffULL);
+	gchar *type = arg2;
 	printf("%s%d ", type, idx);
 }
 
@@ -66,7 +70,7 @@ void adpater_print_targets(struct nfc_adapter *adapter, gchar *prefix)
 {
 	printf("%sTags: [ ", prefix);
 
-	g_slist_foreach(adapter->tags, (GFunc)adapter_print_target, "tag");
+	g_slist_foreach(adapter->tags, adapter_print_target, "tag");
 
 	printf("]\n");
 
@@ -78,8 +82,10 @@ void adpater_print_targets(struct nfc_adapter *adapter, gchar *prefix)
 	printf("]\n");
 }
 
-void adapter_print_info(struct nfc_adapter *adapter)
+void adapter_print_info(gpointer arg1, gpointer arg2)
 {
+	struct nfc_adapter *adapter = arg1;
+
 	gchar *rf_mode_str;
 
 	if (!adapter)
@@ -134,13 +140,15 @@ void adapter_print_info(struct nfc_adapter *adapter)
 void adapter_idx_print_info(guint32 idx)
 {
 	if (idx != INVALID_ADAPTER_IDX)
-		adapter_print_info(adapter_get(idx));
+		adapter_print_info((gpointer)adapter_get(idx), NULL);
 	else
-		g_slist_foreach(adapters, (GFunc)adapter_print_info, NULL);
+		g_slist_foreach(adapters, adapter_print_info, NULL);
 }
 
-static gint adapter_compare_idx(struct nfc_adapter *adapter, guint32 idx)
+static gint adapter_compare_idx(gpointer arg1, gpointer arg2)
 {
+	struct nfc_adapter *adapter = arg1;
+	guint32 idx = (guint32)((unsigned long)arg2 & 0xffffffffULL);
 	return (gint)adapter->idx - (gint)idx;
 }
 

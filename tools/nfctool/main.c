@@ -118,7 +118,7 @@ static int nfctool_set_params(void)
 
 	nl_get_params(adapter);
 
-	adapter_print_info(adapter);
+	adapter_print_info(adapter, NULL);
 
 exit:
 	return err;
@@ -259,8 +259,11 @@ static int nfctool_snl(void)
 	return nfctool_snl_send_request(adapter);
 }
 
-static void nfctool_send_dep_link_up(guint32 target_idx, guint32 adapter_idx)
+static void nfctool_send_dep_link_up(gpointer arg1, gpointer arg2)
 {
+	guint32 adapter_idx = (guint32)((unsigned long)arg1 & 0xffffffffULL);
+	guint32 target_idx = (guint32)((unsigned long)arg2 & 0xffffffffULL);
+
 	nl_send_dep_link_up(adapter_idx, target_idx);
 }
 
@@ -291,7 +294,7 @@ static int nfctool_targets_found(guint32 adapter_idx)
 
 	if (adapter->polling) {
 		g_slist_foreach(adapter->devices,
-				(GFunc)nfctool_send_dep_link_up,
+				nfctool_send_dep_link_up,
 				GINT_TO_POINTER(adapter_idx));
 
 		adapter->polling = FALSE;
@@ -324,9 +327,10 @@ static int nfctool_poll_cb(guint8 cmd, guint32 idx, gpointer data)
 	return err;
 }
 
-static void nfctool_print_and_remove_snl(struct nfc_snl *sdres,
-					 guint32 adapter_idx)
+static void nfctool_print_and_remove_snl(gpointer arg1, gpointer arg2)
 {
+	struct nfc_snl *sdres = arg1;
+	guint32 adapter_idx = (guint32)((unsigned long)arg2 & 0xffffffffULL);
 	GSList *elem;
 
 	printf(" uri: %s - sap: %d\n", sdres->uri, sdres->sap);
@@ -349,7 +353,7 @@ static int nfctool_snl_cb(guint8 cmd, guint32 idx, gpointer data)
 
 	printf("nfc%d: Service Name lookup:\n", idx);
 
-	g_slist_foreach(sdres_list, (GFunc)nfctool_print_and_remove_snl,
+	g_slist_foreach(sdres_list, nfctool_print_and_remove_snl,
 			GINT_TO_POINTER(idx));
 
 	printf("\n");
