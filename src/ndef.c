@@ -1150,7 +1150,8 @@ parse_text_payload(uint8_t *payload, uint32_t length)
 {
 	struct near_ndef_text_payload *text_payload = NULL;
 	uint8_t status, lang_length, len;
-	char *g_str, *txt;
+	char *g_str = NULL;
+	char *txt;
 	uint32_t offset;
 	gboolean valid;
 
@@ -1189,9 +1190,12 @@ parse_text_payload(uint8_t *payload, uint32_t length)
 
 	len = length - lang_length - 1;
 
-	if (status && (len % 2)) {
-		DBG("Payload not valid UTF-16 (length %d does not match)", len);
-		goto fail;
+	if (status) {
+		if (len % 2) {
+			DBG("Payload not valid UTF-16 (length %d does not match)", len);
+			goto fail;
+		}
+		len /= 2;
 	}
 
 	if (len > 0) {
@@ -1206,13 +1210,13 @@ parse_text_payload(uint8_t *payload, uint32_t length)
 
 		valid = g_utf8_validate(g_str, len, NULL);
 
-		if (status)
-			g_free(g_str);
-
 		if (!valid)
 			goto fail;
 
-		text_payload->data = g_strndup(txt, len);
+		/* FIXME: this won't parse properly UTF-8 */
+		text_payload->data = g_strndup(g_str, len);
+		if (status)
+			g_free(g_str);
 	} else {
 		text_payload->data = NULL;
 	}
@@ -1227,6 +1231,8 @@ parse_text_payload(uint8_t *payload, uint32_t length)
 	return text_payload;
 
 fail:
+	if (status)
+		g_free(g_str);
 	near_error("text payload parsing failed");
 	free_text_payload(text_payload);
 
