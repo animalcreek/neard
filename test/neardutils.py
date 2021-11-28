@@ -17,7 +17,7 @@ def find_adapter(pattern=None):
 
 def find_adapter_in_objects(objects, pattern=None):
         bus = dbus.SystemBus()
-        for path, ifaces in objects.iteritems():
+        for path, ifaces in objects.items():
                 adapter = ifaces.get(ADAPTER_INTERFACE)
                 if adapter is None:
                         continue
@@ -31,7 +31,7 @@ def find_device(pattern=None):
 
 def find_device_in_objects(objects, pattern=None):
         bus = dbus.SystemBus()
-        for path, ifaces in objects.iteritems():
+        for path, ifaces in objects.items():
                 device = ifaces.get(DEVICE_INTERFACE)
                 if device is None:
                         continue
@@ -45,7 +45,7 @@ def find_tag(pattern=None):
 
 def find_tag_in_objects(objects, pattern=None):
         bus = dbus.SystemBus()
-        for path, ifaces in objects.iteritems():
+        for path, ifaces in objects.items():
                 tag = ifaces.get(TAG_INTERFACE)
                 if tag is None:
                         continue
@@ -59,7 +59,7 @@ def find_record(pattern=None):
 
 def find_record_in_objects(objects, pattern=None):
         bus = dbus.SystemBus()
-        for path, ifaces in objects.iteritems():
+        for path, ifaces in objects.items():
                 record = ifaces.get(RECORD_INTERFACE)
                 if record is None:
                         continue
@@ -76,18 +76,15 @@ def dump_record(record_path):
         properties = record_prop.GetAll(RECORD_INTERFACE)
 
         for key in properties.keys():
-                if key in ["Representation"]:
-                        val = unicode(properties[key])
-                else:
-                        val = str(properties[key])
-                print "      %s = %s" % (key, val)
+                val = str(properties[key])
+                print("      %s = %s" % (key, val))
 
 def dump_all_records(path):
         bus = dbus.SystemBus()
         om = dbus.Interface(bus.get_object(SERVICE_NAME, "/"),
                                         "org.freedesktop.DBus.ObjectManager")
         objects = om.GetManagedObjects()
-        for path, interfaces in objects.iteritems():
+        for path, interfaces in objects.items():
                 if RECORD_INTERFACE not in interfaces:
                         continue
 
